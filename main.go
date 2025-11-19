@@ -51,8 +51,8 @@ func maxChunks(data []int) int {
 	if len(data) == 1 {
 		return data[0]
 	}
-	if CHUNKS < 1 {
-		return 0
+	if CHUNKS < 1 || len(data) < CHUNKS {
+		return maximum(data)
 	}
 	maxElements := make([]int, CHUNKS)
 	size := len(data)
