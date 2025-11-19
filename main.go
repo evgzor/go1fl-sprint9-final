@@ -22,7 +22,7 @@ func generateRandomElements(size int) []int {
 	var randSource = rand.NewSource(time.Now().UnixNano())
 	rng := rand.New(randSource)
 	for i := range size {
-		elements[i] = rng.Int()
+		elements[i] = rng.Int() + 1
 	}
 
 	return elements
@@ -51,28 +51,26 @@ func maxChunks(data []int) int {
 	if len(data) == 1 {
 		return data[0]
 	}
-	if len(data)%CHUNKS != 0 {
+	if CHUNKS < 1 {
 		return 0
 	}
 	maxElements := make([]int, CHUNKS)
+	size := len(data)
 
 	var wg sync.WaitGroup
 	for i := range CHUNKS {
 		wg.Add(1) // инкрементируем счётчик перед запуском горутины
 
-		size := len(data)
 		startIdx := i * size / CHUNKS
-		endIdx := i*size/CHUNKS + size/CHUNKS
+		endIdx := (i+1)*size/CHUNKS + size/CHUNKS
+		if i == CHUNKS-1 {
+			endIdx = size
+		}
 		go func(idx int, elements []int) {
 			// уменьшаем счётчик, когда горутина завершает работу
 			defer wg.Done()
 
-			result := elements[0]
-			for _, element := range elements[1:] {
-				if element > result {
-					result = element
-				}
-			}
+			result := maximum(elements)
 			// захватили индекс ... и не нужна нам каналы и мютексы
 			maxElements[idx] = result
 
@@ -80,12 +78,7 @@ func maxChunks(data []int) int {
 	}
 	wg.Wait()
 
-	result := maxElements[0]
-	for _, element := range maxElements[1:] {
-		if element > result {
-			result = element
-		}
-	}
+	result := maximum(maxElements)
 
 	return result
 }
@@ -97,17 +90,16 @@ func main() {
 	fmt.Println("Ищем максимальное значение в один поток")
 	timeStart := time.Now()
 	max := maximum(elements)
-	timeEnd := time.Now()
 
-	elapsed := timeEnd.Sub(timeStart).Microseconds()
+	elapsed := time.Since(timeStart).Microseconds()
 
 	fmt.Printf("Максимальное значение элемента: %d\nВремя поиска: %d ms\n", max, elapsed)
 
 	fmt.Printf("Ищем максимальное значение в %d потоков", CHUNKS)
 	timeStart = time.Now()
 	max = maxChunks(elements)
-	timeEnd = time.Now()
-	elapsed = timeEnd.Sub(timeStart).Microseconds()
+
+	elapsed = time.Since(timeStart).Microseconds()
 
 	fmt.Printf("Максимальное значение элемента: %d\nВремя поиска: %d ms\n", max, elapsed)
 }
