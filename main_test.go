@@ -57,7 +57,7 @@ func TestMaximum(t *testing.T) {
 
 func TestMaxChunks(t *testing.T) {
 	var randSource = rand.NewSource(time.Now().UnixNano())
-	rng := rand.New(randSource).Int() + 1
+	rng := rand.New(randSource).Int()
 
 	cases := []struct {
 		name  string
